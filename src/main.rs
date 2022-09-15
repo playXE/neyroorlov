@@ -336,7 +336,7 @@ const UNCOMMON_TEXT: &'static [&'static str] = &[
 ];
 
 const TRIGGERS: &'static [&'static str] = &["нейроорлов", "@Нейроорлов", "@neyroorlov_bot", "нейро орлов"];
-const TRIGGERS_JAL: &'static [&'static str] = &["жаль", "жалко", "рвись", "порвался"];
+const TRIGGERS_JAL: &'static [&'static str] = &["жаль", "жалко", "рвись", "порвался", "порвались"];
 
 use std::env;
 
