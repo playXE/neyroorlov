@@ -342,11 +342,9 @@ use std::env;
 
 use rand::Rng;
 use serenity::async_trait;
-use serenity::builder::CreateMessage;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::UserId;
-use serenity::model::user::User;
 use serenity::prelude::*;
 use parking_lot::RwLock;
 
