@@ -366,6 +366,9 @@ impl EventHandler for Porvaha {
         
         if msg.mentions_me(&ctx.http).await.unwrap_or(false) {
             let reply_to = if let Some(ref rmsg) = msg.referenced_message {
+                if rmsg.author.bot {
+                    return;
+                }
                 println!("{:?} '{}'", msg, msg.content_safe(&ctx.cache));
                 if msg.content_safe(&ctx.cache).starts_with("@Нейроорлов#0560") && msg.content_safe(&ctx.cache).ends_with("@Нейроорлов#0560") {
                     rmsg
