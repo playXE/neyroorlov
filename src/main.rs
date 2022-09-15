@@ -359,6 +359,10 @@ impl EventHandler for Porvaha {
         if msg.author.id == ctx.cache.current_user_id() {
             return;
         }
+
+        if msg.author.bot {
+            return;
+        }
         
         if msg.mentions_me(&ctx.http).await.unwrap_or(false) {
             let reply_to = if let Some(ref rmsg) = msg.referenced_message {
