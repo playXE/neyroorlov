@@ -335,21 +335,28 @@ const UNCOMMON_TEXT: &'static [&'static str] = &[
     "Чет ты меня заебал. Ты по делу что-то скажешь?",
 ];
 
-const TRIGGERS: &'static [&'static str] = &["нейроорлов", "@Нейроорлов", "@neyroorlov_bot", "нейро орлов"];
+const TRIGGERS: &'static [&'static str] = &[
+    "нейроорлов",
+    "@Нейроорлов",
+    "@neyroorlov_bot",
+    "нейро орлов",
+];
 const TRIGGERS_JAL: &'static [&'static str] = &["жаль", "жалко", "рвись", "порвался", "порвались"];
 
-use std::env;
-
-use rand::Rng;
+use rand::prelude::Distribution;
+use rand_distr::Uniform;
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
+use std::env;
 
 struct Porvaha;
 
 fn random_idx<T>(v: &[T]) -> &T {
-    let idx = rand::thread_rng().gen_range(0..v.len());
+    let u = Uniform::new(0, v.len());
+    let idx = u.sample(&mut rand::thread_rng());
+    // let idx: u64 = rand::thread_rng().sample(Hypergeometric::new(60, 24, 7).unwrap()).gen_range(0..v.len());
     &v[idx]
 }
 
@@ -363,14 +370,16 @@ impl EventHandler for Porvaha {
         if msg.author.bot {
             return;
         }
-        
+
         if msg.mentions_me(&ctx.http).await.unwrap_or(false) {
             let reply_to = if let Some(ref rmsg) = msg.referenced_message {
-                if rmsg.author.bot {
-                    return;
-                }
                 println!("{:?} '{}'", msg, msg.content_safe(&ctx.cache));
-                if msg.content_safe(&ctx.cache).starts_with("@Нейроорлов#0560") && msg.content_safe(&ctx.cache).ends_with("@Нейроорлов#0560") {
+                if msg.content_safe(&ctx.cache).starts_with("@Нейроорлов#0560")
+                    && msg.content_safe(&ctx.cache).ends_with("@Нейроорлов#0560")
+                {
+                    if rmsg.author.bot {
+                        return;
+                    }
                     rmsg
                 } else {
                     &msg
@@ -378,11 +387,15 @@ impl EventHandler for Porvaha {
             } else {
                 &msg
             };
-            
-            if let Err(why) = reply_to.channel_id.send_message(&ctx.http, |m| {
-                m.reference_message(reply_to)
-                    .content(random_idx(&MAIN_PHARSES))
-            }).await {
+
+            if let Err(why) = reply_to
+                .channel_id
+                .send_message(&ctx.http, |m| {
+                    m.reference_message(reply_to)
+                        .content(random_idx(&MAIN_PHARSES))
+                })
+                .await
+            {
                 println!("Failed to send message: {:?}", why);
             }
             return;
@@ -390,21 +403,32 @@ impl EventHandler for Porvaha {
 
         let lowercase = msg.content.to_lowercase();
         if TRIGGERS.iter().any(|t| lowercase.contains(t)) {
-            if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
-                m.reference_message(&msg)
-                    .content(random_idx(&COMMON_TEXT))
-            }).await {
+            if let Err(why) = msg
+                .channel_id
+                .send_message(&ctx.http, |m| {
+                    m.reference_message(&msg).content(random_idx(&COMMON_TEXT))
+                })
+                .await
+            {
                 println!("Failed to send message: {:?}", why);
             }
             return;
         }
 
-        if lowercase.split(&[' ', ',']).next().iter().any(|m| TRIGGERS_JAL.contains(m)) 
+        if lowercase
+            .split(&[' ', ','])
+            .next()
+            .iter()
+            .any(|m| TRIGGERS_JAL.contains(m))
         {
-            if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
-                m.reference_message(&msg)
-                    .content(random_idx(&UNCOMMON_TEXT))
-            }).await {
+            if let Err(why) = msg
+                .channel_id
+                .send_message(&ctx.http, |m| {
+                    m.reference_message(&msg)
+                        .content(random_idx(&UNCOMMON_TEXT))
+                })
+                .await
+            {
                 println!("Failed to send message: {:?}", why);
             }
             return;
@@ -428,9 +452,11 @@ async fn main() {
     // Create a new instance of the Client, logging in as a bot. This will
     // automatically prepend your bot token with "Bot ", which is a requirement
     // by Discord for bot users.
-    let mut client =
-        Client::builder(&token, intents).event_handler(Porvaha).await.expect("Err creating client");
-    
+    let mut client = Client::builder(&token, intents)
+        .event_handler(Porvaha)
+        .await
+        .expect("Err creating client");
+
     // Finally, start a single shard, and start listening to events.
     //
     // Shards will automatically attempt to reconnect, and will perform
