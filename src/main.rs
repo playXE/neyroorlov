@@ -344,11 +344,9 @@ use rand::Rng;
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::prelude::UserId;
 use serenity::prelude::*;
-use parking_lot::RwLock;
 
-struct Porvaha(RwLock<Option<UserId>>);
+struct Porvaha;
 
 fn random_idx<T>(v: &[T]) -> &T {
     let idx = rand::thread_rng().gen_range(0..v.len());
@@ -358,10 +356,7 @@ fn random_idx<T>(v: &[T]) -> &T {
 #[async_trait]
 impl EventHandler for Porvaha {
     async fn message(&self, ctx: Context, msg: Message) {
-        
-        let id = *self.0.read();
-
-        if msg.author.id == id.unwrap() {
+        if msg.author.id == ctx.cache.current_user_id() {
             return;
         }
         
@@ -410,9 +405,6 @@ impl EventHandler for Porvaha {
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
-        let mut guard = self.0.write();
-        *guard = Some(ready.user.id);
-        drop(guard);
         println!("{} is connected!", ready.user.name);
     }
 }
@@ -430,7 +422,7 @@ async fn main() {
     // automatically prepend your bot token with "Bot ", which is a requirement
     // by Discord for bot users.
     let mut client =
-        Client::builder(&token, intents).event_handler(Porvaha(RwLock::new(None))).await.expect("Err creating client");
+        Client::builder(&token, intents).event_handler(Porvaha).await.expect("Err creating client");
     
     // Finally, start a single shard, and start listening to events.
     //
