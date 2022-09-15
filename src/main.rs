@@ -366,8 +366,18 @@ impl EventHandler for Porvaha {
         }
         
         if msg.mentions_me(&ctx.http).await.unwrap_or(false) {
-            if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
-                m.reference_message(&msg)
+            let reply_to = if let Some(ref rmsg) = msg.referenced_message {
+                if msg.content.starts_with("@Нейроорлов") && msg.content.ends_with("@Нейроорлов") {
+                    rmsg
+                } else {
+                    &msg
+                }
+            } else {
+                &msg
+            };
+            
+            if let Err(why) = reply_to.channel_id.send_message(&ctx.http, |m| {
+                m.reference_message(reply_to)
                     .content(random_idx(&MAIN_PHARSES))
             }).await {
                 println!("Failed to send message: {:?}", why);
